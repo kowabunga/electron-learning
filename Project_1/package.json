@@ -1,0 +1,17 @@
+{
+  "name": "image_shrinker",
+  "version": "1.0.0",
+  "description": "app to resize images with electron",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "nodemon --exec electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^13.2.1",
+    "nodemon": "^2.0.12"
+  }
+}
