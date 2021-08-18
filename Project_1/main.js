@@ -1,11 +1,17 @@
-const { app, BrowserWindow, Menu } = require('electron');
+const path = require('path');
+const os = require('os');
+const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron');
+const imagemin = require('imagemin');
+const imageminMozjpeg = require('imagemin-mozjpeg');
+const imageminPngquant = require('imagemin-pngquant');
+const slash = require('slash');
+const log = require('electron-log');
 
 process.env.NODE_ENV = 'development';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
 const isMac = process.platform === 'darwin';
-const isWindows = process.platform === 'win32';
 
 let mainWindow;
 let aboutWindow;
@@ -13,11 +19,20 @@ let aboutWindow;
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     width: 800,
-    height: 1000,
+    height: 600,
     title: 'ImageShrink',
     icon: `${__dirname}/assets/icons/Icon_256x256.png`,
     backgroundColor: 'white',
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+      enableRemoteModule: true,
+    },
   });
+
+  if (isDev) {
+    mainWindow.webContents.openDevTools();
+  }
 
   mainWindow.loadFile('./app/index.html');
 }
@@ -98,6 +113,11 @@ app
 
     mainWindow.on('closed', () => (mainWindow = null));
 
+    ipcMain.on('image:minimize', (e, options) => {
+      options.dest = path.join(os.homedir(), 'imageshrink');
+      shrinkImage(options);
+    });
+
     //Makes sure app quits entirely
     appCleanup(app);
   })
@@ -118,4 +138,27 @@ function appCleanup(app) {
   app.on('window-all-closed', function () {
     if (process.platform !== 'darwin') app.quit();
   });
+}
+
+async function shrinkImage({ imgPath, quality, dest }) {
+  try {
+    const pngQuality = quality / 100;
+    const files = await imagemin([slash(imgPath)], {
+      destination: dest,
+      plugins: [
+        imageminMozjpeg({ quality }),
+        imageminPngquant({
+          quality: [pngQuality, pngQuality],
+        }),
+      ],
+    });
+
+    log.info(files);
+
+    shell.openPath(dest);
+
+    mainWindow.webContents.send('image:done');
+  } catch (error) {
+    log.error(error);
+  }
 }

@@ -13,5 +13,12 @@
   "devDependencies": {
     "electron": "^13.2.1",
     "nodemon": "^2.0.12"
+  },
+  "dependencies": {
+    "electron-log": "^4.4.1",
+    "imagemin": "^7.0.1",
+    "imagemin-mozjpeg": "^8.0.0",
+    "imagemin-pngquant": "^8.0.0",
+    "slash": "^3.0.0"
   }
 }
